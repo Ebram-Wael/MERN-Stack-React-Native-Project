@@ -6,7 +6,7 @@ const genJWT = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: "10d",
     });
-}
+};
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
@@ -27,7 +27,7 @@ router.post("/register", async (req, res) => {
         }
         const existUserWithUserName = await User.findOne({ userName });
         if (existUserWithUserName) {
-            f
+            f;
             res.status(400).json({ massage: "username already exist" });
         }
         const profileImage = `http://api.dicebear.com/7.x/avataaars/svg?=${userName}`;
@@ -47,18 +47,39 @@ router.post("/register", async (req, res) => {
                 email: user.email,
                 userName: user.userName,
                 profileImage: user.profileImage,
-            }
+            },
         });
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).json({ message: "Internal server error" });
         console.error("Error in registration:", error);
     }
-
 });
 
 router.post("/login", async (req, res) => {
-    res.send("login");
+    try {
+        const { email, password } = req.body;
+        if (!email && !password) res.status(400).json({ message: "all fields are required" });
+        
+        const user = await User.findOne({ email });
+        if (!user) res.status(400).json({ message: "invalid credentials" });
+        
+        const isPasswordCorrect = await user.comparePassword(user._id);
+        if (!isPasswordCorrect) res.status(400).json({ message: "password is incorrect" });
+
+        const token = genJWT(user._id);
+        res.status(200).json({
+            token,
+            user: {
+                _id: user._id,
+                email: user.email,
+                userName: user.userName,
+                profileImage: user.profileImage,
+            },
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Internal server error" });
+        console.error("Error in registration:", error);
+    }
 });
 
 export default router;
