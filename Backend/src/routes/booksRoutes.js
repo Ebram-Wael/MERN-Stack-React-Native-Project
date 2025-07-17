@@ -41,18 +41,57 @@ router.get("/", protectRoute, async (req, res) => {
       .limit(limit)
       .populate("user", "usreName profileImage");
     const totalBooks = await Book.countDocuments();
-    const totalPages = Math.ceil(totalBooks / limit);    
+    const totalPages = Math.ceil(totalBooks / limit);
 
     res.status(200).json({
       books,
       currentPage: page,
       totalBooks,
-      totalPages
+      totalPages,
     });
   } catch (error) {
     console.error("Error fetching books:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+router.get("/:user", protectRoute, async (req, res) => {
+  try {
+    const books = await Book.find({ user: req.params.user }).sort({
+      createdAt: -1,
+    });
+    res.json(books);
+  } catch (error) {
+    console.error("Get user books error:",error.massage);
+    res.status(500).json({ massage:"server error" });
+  }
+});
+
+router.delete("/:id", protectRoute, async (req, res) => {
+  try {
+    const bookId = req.params.id;
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ massage: "Book not found" });
+    }
+    if (book.user.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to delete this book" });
+    }
+    //delete the image from cloudinary
+    if (book.image && book.image.includes("cloudinary")) {
+      const publicId = book.image.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
+    }
+    await book.deleteOne();
+    res.status(200).json({ message: "Book deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting books:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//router.put("/:id", protectRoute, async (req, res) => {
 
 export default router;
