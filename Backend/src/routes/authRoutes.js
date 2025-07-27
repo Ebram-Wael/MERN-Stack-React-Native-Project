@@ -7,30 +7,38 @@ const genJWT = (id) => {
         expiresIn: "10d",
     });
 };
+
 const router = express.Router();
+
 
 router.post("/register", async (req, res) => {
     try {
         const { email, userName, password } = req.body;
-        if (!email && !userName && !password) {
-            res.status(400).json({ message: "All fields are required" });
+
+        if (!email || !userName || !password) {
+            return res.status(400).json({ message: "All fields are required" });
         }
+
         if (password.length < 6) {
-            res.status(400).json({ massage: "password must be more then 6 digit" });
+            return res.status(400).json({ message: "Password must be more than 6 characters" });
         }
+
         if (userName.length < 3) {
-            res.status(400).json({ massage: "userName must be more then 3 digit" });
+            return res.status(400).json({ message: "Username must be more than 3 characters" });
         }
+
         const existUserWithEmail = await User.findOne({ email });
         if (existUserWithEmail) {
-            res.status(400).json({ massage: "email already exist" });
+            return res.status(400).json({ message: "Email already exists" });
         }
+
         const existUserWithUserName = await User.findOne({ userName });
         if (existUserWithUserName) {
-            f;
-            res.status(400).json({ massage: "username already exist" });
+            return res.status(400).json({ message: "Username already exists" });
         }
-        const profileImage = `http://api.dicebear.com/7.x/avataaars/svg?=${userName}`;
+
+        const profileImage = `http://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`;
+
         const user = new User({
             email,
             userName,
@@ -39,8 +47,10 @@ router.post("/register", async (req, res) => {
         });
 
         await user.save();
+
         const token = genJWT(user._id);
-        res.status(200).json({
+
+        return res.status(200).json({
             token,
             user: {
                 _id: user._id,
@@ -49,25 +59,36 @@ router.post("/register", async (req, res) => {
                 profileImage: user.profileImage,
             },
         });
-    } catch (error) {
-        res.status(500).json({ message: "Internal server error" });
-        console.error("Error in registration:", error);
+
+    } catch (err) {
+        console.error("Error in registration:", err);
+        return res.status(500).json({ message: "Internal server error" });
     }
 });
 
+
+// 📌 Login Route
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email && !password) res.status(400).json({ message: "all fields are required" });
-        
+
+        if (!email || !password) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
         const user = await User.findOne({ email });
-        if (!user) res.status(400).json({ message: "invalid credentials" });
-        
-        const isPasswordCorrect = await user.comparePassword(user._id);
-        if (!isPasswordCorrect) res.status(400).json({ message: "password is incorrect" });
+        if (!user) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        const isPasswordCorrect = await user.comparePassword(password);
+        if (!isPasswordCorrect) {
+            return res.status(400).json({ message: "Password is incorrect" });
+        }
 
         const token = genJWT(user._id);
-        res.status(200).json({
+
+        return res.status(200).json({
             token,
             user: {
                 _id: user._id,
@@ -76,9 +97,10 @@ router.post("/login", async (req, res) => {
                 profileImage: user.profileImage,
             },
         });
+
     } catch (err) {
-        res.status(500).json({ message: "Internal server error" });
-        console.error("Error in registration:", error);
+        console.error("Error in login:", err);
+        return res.status(500).json({ message: "Internal server error" });
     }
 });
 

@@ -4,9 +4,9 @@ import User from "../models/User.js"; // Import the User model
 
 const protectRoute = async (req,res,next) =>{
     try {
-        const token = req.header("Authorizaton").replase("Bearer","");
+        const token = req.header("Authorization").replace("Bearer","");
         if(!token){
-            return res.status(401).json({ massage: "No authentiction token provided"});
+            return res.status(401).json({ massage: "No auth token provided"});
         }  
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id).select("-password");// Exclude password from the user object

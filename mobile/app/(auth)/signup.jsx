@@ -13,16 +13,25 @@ import { Image } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import COLORS from "../../constants/colors";
 import { Link, useRouter } from "expo-router";
-
+import useAuthStore from "../../store/authStore";
+import { Alert } from "react-native";
 export default function signup() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const {user, register, isLoadingIn }  = useAuthStore();
+
+  // useEffect(() => {}, [user]);
 
   const router = useRouter();
-  const handleSignup = () => {};
+  const handleSignup = () => {
+    const result = register(email, username, password);
+    if (!result.success) {
+      Alert.alert("Error", result.message || "Registration failed");
+    }
+  };
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}

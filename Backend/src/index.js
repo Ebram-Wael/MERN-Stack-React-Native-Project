@@ -5,7 +5,7 @@ import cors from "cors";
 import { connectDB } from "./lib/db.js"; // Import the database connection function
 
 import authRoutes from "./routes/authRoutes.js";
-import booksReoutes from "./routes/booksRoutes.js"
+import booksRoutes from "./routes/booksRoutes.js"
 
 const app = express();
 
@@ -17,9 +17,9 @@ app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
-app.use("/books",booksReoutes)
+app.use("/api/books",booksRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
