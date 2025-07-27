@@ -13,9 +13,11 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());// Enable CORS for all routes
 app.use(express.urlencoded({ extended: true }));
-app.get("/", (req, res) => {
+app.get("/test", (req, res) => {
   res.send("Hello, World!");
 });
+
+
 
 app.use("/api/auth", authRoutes);
 
