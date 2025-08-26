@@ -72,11 +72,12 @@ const styles = StyleSheet.create({
   textArea: {
     backgroundColor: COLORS.inputBackground,
     borderRadius: 12,
-    borderWidth: 1,
+    // borderWidth: 1,
     borderColor: COLORS.border,
     padding: 12,
     height: 100,
     color: COLORS.textDark,
+    width: "100%",
   },
   ratingContainer: {
     flexDirection: "row",
