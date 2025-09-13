@@ -1,3 +1,5 @@
+/* eslint-disable import/no-duplicates */
+/* eslint-disable import/no-unresolved */
 import {
   View,
   Text,
@@ -9,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import styles from "../../assets//styles//login.styles";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Image } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import COLORS from "../../constants/colors";
@@ -19,7 +21,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { user, isLoading, login } = useAuthStore();
+  const { isLoading, login } = useAuthStore();
 
   const handleLogin = async () => {
     const result = await login(email, password);
@@ -99,7 +101,7 @@ export default function Login() {
             </TouchableOpacity>
             <View style={styles.footer}>
               <Text style={styles.footerText}>
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link href="signup" asChild>
                   <TouchableOpacity>
                     <Text style={styles.link}>Sign Up</Text>

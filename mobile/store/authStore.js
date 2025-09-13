@@ -11,13 +11,16 @@ const useAuthStore = create((set) => ({
   register: async (email, userName, password) => {
     set({ isLoading: true });
     try {
-      const response = await fetch("http://192.168.1.3:3000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, userName, password }),
-      });
+      const response = await fetch(
+        "http://192.168.1.3:3000/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, userName, password }),
+        }
+      );
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || "Registration failed");
@@ -28,7 +31,7 @@ const useAuthStore = create((set) => ({
       return { success: true, user: data.user };
     } catch (error) {
       set({ isLoading: false });
-      console.error("Registration error:", error);
+      //console.error("Registration error:", error);
       return {
         success: false,
         message: error.message || "Registration failed",
@@ -37,6 +40,7 @@ const useAuthStore = create((set) => ({
   },
   checkAuth: async () => {
     try {
+
       const token = await AsyncStorage.getItem("token");
       const userJson = await AsyncStorage.getItem("user");
       const user = userJson ? JSON.parse(userJson) : null;
@@ -60,7 +64,6 @@ const useAuthStore = create((set) => ({
       if (!response.ok) {
         throw new Error(data.message || "something went wrong");
       }
-      console.log("My data Login", data);
       await AsyncStorage.setItem("token", data.token);
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
@@ -75,7 +78,9 @@ const useAuthStore = create((set) => ({
     try {
       await AsyncStorage.removeItem("user");
       await AsyncStorage.removeItem("token");
-      set({ token: null, user: null });
+      setTimeout(() => {
+        set({ user: null, token: null });
+      }, 3000);
     } catch (error) {
       console.error(error);
     }

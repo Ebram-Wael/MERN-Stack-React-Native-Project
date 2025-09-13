@@ -11,7 +11,7 @@ export default function RootLayout() {
   const { checkAuth, user, token } = useAuthStore();
   const [loading, setLoading] = useState(true);
 
-  // ✅ استنى لحد ما checkAuth يخلص
+  
   useEffect(() => {
     const init = async () => {
       await checkAuth();
@@ -20,7 +20,6 @@ export default function RootLayout() {
     init();
   }, []);
 
-  // ✅ بعد ما يخلص checkAuth و RootLayout mounted
   useEffect(() => {
     if (!loading) {
       const inAuthScreen = segments[0] === "(auth)";
@@ -35,7 +34,7 @@ export default function RootLayout() {
   }, [loading, user, token, segments]);
 
   if (loading) {
-    return null; // أو ممكن تعمل شاشة Loading
+    return null;
   }
 
   return (

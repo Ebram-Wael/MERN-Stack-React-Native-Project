@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { Tabs } from "expo-router";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import COLORS from "../../constants/colors";

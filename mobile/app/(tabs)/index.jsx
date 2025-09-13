@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable import/no-unresolved */
 import {
   View,
   Text,
@@ -5,12 +7,15 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import { Image } from "expo-image";
 import { useState, useEffect } from "react";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import styles from "../../assets/styles/home.styles";
 import useAuthStore from "../../store/authStore";
+import CommentsModal from "../../components/CommentsModal";
+import AddComment from "../../components/AddComment";
 import COLORS from "../../constants/colors";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -22,9 +27,12 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const { token } = useAuthStore();
+  const [activeBookId, setActiveBookId] = useState(null);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const { token, user } = useAuthStore();
 
   const fetchBooks = async (pageNum = 1, refresh = false) => {
+    if (!token) return;
     try {
       if (refresh) setRefreshing(true);
       else if (pageNum === 1) setLoading(true);
@@ -49,11 +57,11 @@ export default function Home() {
         refresh || pageNum === 1 ? data.books : [...books, ...data.books];
 
       const uniqueBooks = Array.from(
-        new Map(mergedBooks.map((b) => [b._id, b])).values()
+        new Map(mergedBooks.map((b) => [b?._id, b])).values()
       );
 
       setBooks(uniqueBooks);
-      setHasMore(pageNum < data.totalPages);
+      setHasMore(pageNum < (data.totalPages || 1));
       setPage(pageNum);
     } catch (error) {
       console.error("Error fetching books:", error);
@@ -65,8 +73,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchBooks();
-  }, []);
+    if (token && user) fetchBooks();
+  }, [token]);
 
   const handleRefresh = async () => {
     await fetchBooks(1, true);
@@ -79,7 +87,7 @@ export default function Home() {
     }
   };
 
-  const renderRatingStars = (rating) => {
+  const renderRatingStars = (rating = 0) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
@@ -94,25 +102,63 @@ export default function Home() {
     return stars;
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.bookCard}>
-      <View style={styles.bookHeader}>
-        <View style={styles.userInfo}>
-          <Image source={{ uri: item.user.profileImage }} style={styles.avatar} />
-          <Text style={styles.username}>{item.user.userName}</Text>
+  const renderItem = ({ item }) => {
+    if (!item) return null;
+
+    const userInfo = item.user || {};
+    const bookDate = item.createdAt
+      ? item.createdAt.split("T")[0]
+      : "Unknown date";
+
+    return (
+      <View style={styles.bookCard}>
+        <View style={styles.bookHeader}>
+          <View style={styles.userInfo}>
+            <Image
+              source={userInfo.profileImage ? { uri: userInfo.profileImage } : null}
+              style={styles.avatar}
+            />
+            <Text style={styles.username}>{userInfo.userName || "Anonymous"}</Text>
+          </View>
+        </View>
+
+        <View style={styles.bookImageContainer}>
+          <Image
+            source={item.image ? { uri: item.image } : null}
+            style={styles.bookImage}
+            contentFit="cover"
+          />
+        </View>
+
+        <View style={styles.bookDetails}>
+          <Text style={styles.bookTitle}>{item.title || "Untitled"}</Text>
+          <View style={styles.ratingContainer}>
+            {renderRatingStars(item.rating)}
+          </View>
+          <Text style={styles.caption}>{item.caption || "No description"}</Text>
+          <Text style={styles.date}>Shared on {bookDate}</Text>
+        </View>
+
+        <View style={{ flexDirection: "row", alignItems: "center", width: "97%" }}>
+          <TouchableOpacity
+            onPress={() => {
+              if (item?._id) {
+                setActiveBookId(item._id);
+                setShowCommentsModal(true);
+              }
+            }}
+          >
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={24}
+              color={COLORS.primary}
+            />
+          </TouchableOpacity>
+          {item?._id && <AddComment bookId={item._id} />}
         </View>
       </View>
-      <View style={styles.bookImageContainer}>
-        <Image source={{ uri: item.image }} style={styles.bookImage} contentFit="cover" />
-      </View>
-      <View style={styles.bookDetails}>
-        <Text style={styles.bookTitle}>{item.title}</Text>
-        <View style={styles.ratingContainer}>{renderRatingStars(item.rating)}</View>
-        <Text style={styles.caption}>{item.caption}</Text>
-        <Text style={styles.date}>Shared on {item.createdAt.split("T")[0]}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   if (loading)
     return (
@@ -126,11 +172,20 @@ export default function Home() {
       </View>
     );
 
+  if (!token)
+    return (
+      <View style={styles.container}>
+        <Text style={{ color: COLORS.textSecondary }}>
+          Please log in to see books.
+        </Text>
+      </View>
+    );
+
   return (
     <View style={styles.container}>
       <FlatList
         data={books}
-        keyExtractor={(item) => item._id.toString()}
+        keyExtractor={(item, index) => item?._id?.toString() || index.toString()}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
@@ -145,7 +200,7 @@ export default function Home() {
           <View style={styles.header}>
             <Text style={styles.headerTitle}>BookWorm 🦉</Text>
             <Text style={styles.headerSubtitle}>
-              Discover great read from community
+              Discover great reads from the community
             </Text>
           </View>
         }
@@ -153,7 +208,9 @@ export default function Home() {
           <View>
             <Ionicons name="book-outline" size={60} color={COLORS.primary} />
             <Text style={styles.emptyText}>No books found</Text>
-            <Text style={styles.emptySubtext}>Be the first to share a book!</Text>
+            <Text style={styles.emptySubtext}>
+              Be the first to share a book!
+            </Text>
           </View>
         }
         ListFooterComponent={
@@ -167,6 +224,12 @@ export default function Home() {
         }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
+      />
+
+      <CommentsModal
+        visible={showCommentsModal}
+        onClose={() => setShowCommentsModal(false)}
+        bookId={activeBookId}
       />
     </View>
   );

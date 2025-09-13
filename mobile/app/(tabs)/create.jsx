@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { useState } from "react";
 import {
   View,
@@ -16,7 +17,6 @@ import styles from "../../assets/styles/create.styles";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import COLORS from "../../constants/colors";
 import * as FileSystem from "expo-file-system";
-
 import * as ImagePicker from "expo-image-picker";
 import useAuthStore from "../../store/authStore";
 
@@ -29,17 +29,13 @@ export default function Create() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-
-  const { token , user} = useAuthStore();
-
-  const User = JSON.stringify(user);
+  const { token, user } = useAuthStore();
 
   const pickImage = async () => {
     try {
       if (Platform.OS !== "web") {
         const { status } =
           await ImagePicker.requestMediaLibraryPermissionsAsync();
-        console.log("Image Picker Status:", status);
         if (status !== "granted") {
           Alert.alert(
             "Sorry, we need camera roll permissions to make this work!"
@@ -49,9 +45,8 @@ export default function Create() {
       }
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: "images",
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.5,
+        allowsEditing: false,
+        quality: 0.2,
         base64: true,
       });
 
@@ -100,6 +95,11 @@ export default function Create() {
       Alert.alert("Error", "Please fill in all the fields.");
       return;
     }
+    if (!token || !user?._id) {
+      Alert.alert("Error", "User not logged in!");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -119,9 +119,9 @@ export default function Create() {
         body: JSON.stringify({
           title,
           caption,
-          rating, 
+          rating,
           image: imageDataUrl,
-          User
+          userId: user._id, // ✅ بعت الـ id بس
         }),
       });
 
@@ -147,6 +147,16 @@ export default function Create() {
       setLoading(false);
     }
   };
+
+  if (!token || !user?._id) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ color: COLORS.textSecondary }}>
+          You need to log in first
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -196,6 +206,8 @@ export default function Create() {
             <Text style={styles.label}>Your Rating</Text>
             {renderRatingStars()}
           </View>
+
+          {/* Book Image */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Book Image</Text>
             <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
@@ -209,12 +221,14 @@ export default function Create() {
                     color={COLORS.textSecondary}
                   />
                   <Text style={styles.placeholderText}>
-                    Tab to select an image
+                    Tap to select an image
                   </Text>
                 </View>
               )}
             </TouchableOpacity>
           </View>
+
+          {/* Caption */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Caption</Text>
             <View style={styles.inputContainer}>
@@ -229,6 +243,7 @@ export default function Create() {
             </View>
           </View>
 
+          {/* Submit Button */}
           <TouchableOpacity
             style={styles.button}
             onPress={handleSubmit}

@@ -1,3 +1,6 @@
+/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable import/no-duplicates */
+/* eslint-disable import/no-unresolved */
 import {
   View,
   Text,
@@ -8,11 +11,10 @@ import {
   Platform,
 } from "react-native";
 import styles from "../../assets//styles//signup.styles";
-import { useState, useEffect } from "react";
-import { Image } from "react-native";
+import { useState } from "react";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import COLORS from "../../constants/colors";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import useAuthStore from "../../store/authStore";
 import { Alert } from "react-native";
 export default function signup() {
@@ -20,15 +22,14 @@ export default function signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const {user, register, isLoading }  = useAuthStore();
+  const { register, isLoading }  = useAuthStore();
 
-  // useEffect(() => {}, [user]);
-
+  
   const router = useRouter();
   const handleSignup = () => {
     const result = register(email, username, password);
     if (!result.success) {
-      Alert.alert("Error", result.message || "Registration failed");
+      //Alert.alert("Error", result.message || "Registration failed");
     }
   };
   return (
